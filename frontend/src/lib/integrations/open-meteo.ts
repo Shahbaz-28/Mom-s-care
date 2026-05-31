@@ -1,12 +1,24 @@
+/** Default: Delhi, India (Open-Meteo). Override with WEATHER_LAT / WEATHER_LON in .env.local */
+export const DEFAULT_WEATHER = {
+  lat: 28.6139,
+  lon: 77.2090,
+  label: "Delhi, India",
+  fallbackTempF: 95,
+} as const;
+
 export interface DailyWeather {
   date: string;
   tempF: number;
 }
 
 export function getWeatherCoordinates() {
-  const lat = parseFloat(process.env.WEATHER_LAT ?? "40.7128");
-  const lon = parseFloat(process.env.WEATHER_LON ?? "-74.0060");
+  const lat = parseFloat(process.env.WEATHER_LAT ?? String(DEFAULT_WEATHER.lat));
+  const lon = parseFloat(process.env.WEATHER_LON ?? String(DEFAULT_WEATHER.lon));
   return { lat, lon };
+}
+
+export function getWeatherLocationLabel(): string {
+  return process.env.WEATHER_LOCATION_LABEL?.trim() || DEFAULT_WEATHER.label;
 }
 
 export async function fetchDailyWeather(

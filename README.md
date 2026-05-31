@@ -70,7 +70,7 @@ Edit `frontend/.env.local`:
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | `https://YOUR_REF.supabase.co` (no `/rest/v1`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Server-only service role key |
-| `WEATHER_LAT` / `WEATHER_LON` | No | Location for Open-Meteo (default NYC) |
+| `WEATHER_LAT` / `WEATHER_LON` | No | Location for Open-Meteo (default Delhi, India) |
 | `TELEGRAM_BOT_TOKEN` | No | Bot token from BotFather |
 | `TELEGRAM_CHAT_ID` | No | Your numeric chat ID ([@userinfobot](https://t.me/userinfobot)) |
 | `TELEGRAM_SEVERITY_THRESHOLD` | No | Alert when severity ≥ this (default `8`) |

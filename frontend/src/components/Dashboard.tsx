@@ -40,6 +40,7 @@ export function Dashboard() {
   const [patterns, setPatterns] = useState<DailyPattern[]>([]);
   const [patternInsight, setPatternInsight] = useState("");
   const [weatherInsight, setWeatherInsight] = useState<string | null>(null);
+  const [weatherLocation, setWeatherLocation] = useState("Delhi, India");
   const [patternsLoading, setPatternsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +52,7 @@ export function Dashboard() {
       setPatterns(data.patterns);
       setPatternInsight(data.insight);
       setWeatherInsight(data.weatherInsight);
+      setWeatherLocation(data.weatherLocation ?? "Delhi, India");
     } catch {
       setPatterns([]);
       setPatternInsight("Add symptoms and medication logs to detect patterns.");
@@ -203,6 +205,7 @@ export function Dashboard() {
                 data={patterns}
                 insight={patternInsight}
                 weatherInsight={weatherInsight}
+                weatherLocation={weatherLocation}
                 loadingPatterns={patternsLoading}
                 symptoms={symptoms}
                 onAddSymptom={async (payload) => {

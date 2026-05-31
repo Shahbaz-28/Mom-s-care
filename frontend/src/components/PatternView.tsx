@@ -16,6 +16,7 @@ interface PatternViewProps {
   data: DailyPattern[];
   insight: string;
   weatherInsight: string | null;
+  weatherLocation?: string;
   loadingPatterns?: boolean;
   symptoms: SymptomEntry[];
   onAddSymptom: (
@@ -41,6 +42,7 @@ export function PatternView({
   data,
   insight,
   weatherInsight,
+  weatherLocation = "Delhi, India",
   loadingPatterns,
   symptoms,
   onAddSymptom,
@@ -199,7 +201,7 @@ export function PatternView({
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Symptom & adherence patterns</h2>
             <p className="text-sm text-slate-500">
-              Your logs + live daily temperature from Open-Meteo
+              Your logs + live daily temperature ({weatherLocation}) via Open-Meteo
             </p>
           </div>
           <div className="flex flex-wrap gap-4 text-xs text-slate-600">

@@ -1,5 +1,6 @@
 import type { DailyPattern, Medication, SymptomEntry } from "@/lib/mock-data";
 import { formatDateLabel, todayIso } from "@/lib/care-utils";
+import { DEFAULT_WEATHER } from "@/lib/integrations/open-meteo";
 
 function addDays(iso: string, days: number) {
   const d = new Date(iso + "T12:00:00");
@@ -52,7 +53,7 @@ export function buildDailyPatterns(
       symptomName: top?.name ?? null,
       medsTaken: dayMeds.filter((m) => m.takenToday).length,
       medsTotal: dayMeds.length,
-      tempF: weatherByDate[date] ?? 72,
+      tempF: weatherByDate[date] ?? DEFAULT_WEATHER.fallbackTempF,
     };
   });
 }

@@ -105,6 +105,7 @@ export interface PatternResponse {
   insight: string;
   weatherInsight: string | null;
   weatherSource: string;
+  weatherLocation: string;
   dateRange: { start: string; end: string };
 }
 

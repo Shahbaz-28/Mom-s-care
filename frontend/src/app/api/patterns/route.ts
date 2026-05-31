@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { mapMedication, mapSymptom } from "@/lib/mappers";
-import { fetchDailyWeather, weatherMap } from "@/lib/integrations/open-meteo";
+import {
+  fetchDailyWeather,
+  getWeatherLocationLabel,
+  weatherMap,
+} from "@/lib/integrations/open-meteo";
 import {
   buildDailyPatterns,
   buildPatternInsight,
@@ -45,6 +49,7 @@ export async function GET() {
       insight,
       weatherInsight,
       weatherSource: "Open-Meteo",
+      weatherLocation: getWeatherLocationLabel(),
       dateRange: { start, end },
     });
   } catch (e) {

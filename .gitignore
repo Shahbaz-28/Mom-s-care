@@ -41,3 +41,11 @@ next-env.d.ts
 
 # Cursor / local tooling
 .cursor/
+
+# Local-only (not pushed to GitHub)
+queries/
+supabase/
+BUILD_PLAN.md
+project_handoff.md
+frontend/AGENTS.md
+frontend/CLAUDE.md
