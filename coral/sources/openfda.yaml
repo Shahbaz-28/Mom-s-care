@@ -1,0 +1,76 @@
+name: openfda
+version: 0.1.0
+dsl_version: 3
+backend: http
+description: US FDA drug labels via OpenFDA (no API key). Filter by generic drug name.
+base_url: https://api.fda.gov
+test_queries:
+  - SELECT generic_name, brand_name FROM openfda.drug_labels WHERE drug_name = 'lisinopril' LIMIT 1
+  - SELECT generic_name, brand_name FROM openfda.drug_labels WHERE drug_name = 'amlodipine' LIMIT 1
+tables:
+  - name: drug_labels
+    description: |
+      FDA drug label records. Pass drug_name (US generic name, e.g. lisinopril, acetaminophen).
+      Paracetamol is not listed — use acetaminophen.
+    fetch_limit_default: 5
+    filters:
+      - name: drug_name
+        required: true
+    request:
+      method: GET
+      path: /drug/label.json
+      query:
+        - name: search
+          from: template
+          template: 'openfda.generic_name:"{{filter.drug_name}}"'
+        - name: limit
+          from: literal
+          value: "5"
+    response:
+      rows_path:
+        - results
+    columns:
+      - name: drug_name
+        type: Utf8
+        description: US generic drug name — use in WHERE clause (e.g. WHERE drug_name = 'lisinopril')
+        expr:
+          kind: template
+          template: "{{filter.drug_name}}"
+      - name: generic_name
+        type: Utf8
+        nullable: true
+        description: Generic drug name from openfda.generic_name
+        expr:
+          kind: path
+          path:
+            - openfda
+            - generic_name
+            - "0"
+      - name: brand_name
+        type: Utf8
+        nullable: true
+        description: Brand name from openfda.brand_name
+        expr:
+          kind: path
+          path:
+            - openfda
+            - brand_name
+            - "0"
+      - name: adverse_reactions
+        type: Utf8
+        nullable: true
+        description: Adverse reactions section text
+        expr:
+          kind: path
+          path:
+            - adverse_reactions
+            - "0"
+      - name: warnings
+        type: Utf8
+        nullable: true
+        description: Warnings section text
+        expr:
+          kind: path
+          path:
+            - warnings
+            - "0"

@@ -1,0 +1,86 @@
+name: care
+version: 0.1.0
+dsl_version: 3
+backend: file
+description: Caregiver logs — medications, symptoms, appointments, drug checks (export from Supabase or edit JSONL in data/).
+inputs:
+  CARE_DATA_PATH:
+    kind: variable
+    default: file:///C:/Users/shada/OneDrive/Desktop/med/data/
+    hint: Absolute file URI to the data/ folder (use forward slashes on Windows)
+test_queries:
+  - SELECT * FROM care.medications LIMIT 1
+  - SELECT * FROM care.symptoms LIMIT 1
+  - SELECT * FROM care.appointments LIMIT 1
+  - SELECT * FROM care.drug_checks LIMIT 1
+tables:
+  - name: medications
+    description: Daily medication logs (taken or missed)
+    format: jsonl
+    source:
+      location: "file:///C:/Users/shada/OneDrive/Desktop/med/data/"
+      glob: medications.jsonl
+    columns:
+      - name: name
+        type: Utf8
+      - name: dose
+        type: Utf8
+      - name: schedule
+        type: Utf8
+      - name: log_date
+        type: Utf8
+      - name: taken
+        type: Boolean
+      - name: refill_due
+        type: Utf8
+        nullable: true
+
+  - name: symptoms
+    description: Symptom diary entries with severity 1-10
+    format: jsonl
+    source:
+      location: "file:///C:/Users/shada/OneDrive/Desktop/med/data/"
+      glob: symptoms.jsonl
+    columns:
+      - name: log_date
+        type: Utf8
+      - name: name
+        type: Utf8
+      - name: severity
+        type: Int64
+      - name: notes
+        type: Utf8
+        nullable: true
+
+  - name: appointments
+    description: Doctor visits for Mom
+    format: jsonl
+    source:
+      location: "file:///C:/Users/shada/OneDrive/Desktop/med/data/"
+      glob: appointments.jsonl
+    columns:
+      - name: appt_date
+        type: Utf8
+      - name: doctor
+        type: Utf8
+      - name: specialty
+        type: Utf8
+      - name: notes
+        type: Utf8
+        nullable: true
+
+  - name: drug_checks
+    description: Medications queued for FDA cross-reference
+    format: jsonl
+    source:
+      location: "file:///C:/Users/shada/OneDrive/Desktop/med/data/"
+      glob: drug_checks.jsonl
+    columns:
+      - name: drug
+        type: Utf8
+      - name: reported_symptom
+        type: Utf8
+      - name: fda_side_effect
+        type: Utf8
+      - name: match_strength
+        type: Utf8

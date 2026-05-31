@@ -1,0 +1,30 @@
+name: open_meteo
+version: 0.1.0
+dsl_version: 3
+backend: file
+description: Daily weather snapshot (Open-Meteo). Refresh weather.jsonl from the app or scripts/sync-weather.ps1.
+inputs:
+  WEATHER_DATA_PATH:
+    kind: variable
+    default: file:///C:/Users/shada/OneDrive/Desktop/med/data/
+    hint: Folder containing weather.jsonl
+test_queries:
+  - SELECT * FROM open_meteo.daily_weather LIMIT 3
+tables:
+  - name: daily_weather
+    description: Daily high temperature (F) by date for pattern overlay
+    format: jsonl
+    source:
+      location: "file:///C:/Users/shada/OneDrive/Desktop/med/data/"
+      glob: weather.jsonl
+    columns:
+      - name: date
+        type: Utf8
+      - name: temp_f
+        type: Float64
+      - name: latitude
+        type: Float64
+        nullable: true
+      - name: longitude
+        type: Float64
+        nullable: true

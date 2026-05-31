@@ -1,0 +1,5 @@
+{"name":"Lisinopril","dose":"10 mg","schedule":"Morning","log_date":"2026-05-29","taken":false,"refill_due":"2026-06-16"}
+{"name":"Lisinopril","dose":"10 mg","schedule":"Morning","log_date":"2026-05-30","taken":false,"refill_due":"2026-06-16"}
+{"name":"Lisinopril","dose":"10 mg","schedule":"Morning","log_date":"2026-05-31","taken":false,"refill_due":"2026-06-16"}
+{"name":"Amlodipine","dose":"5 mg","schedule":"Morning","log_date":"2026-05-31","taken":true,"refill_due":"2026-06-03"}
+{"name":"Metformin","dose":"500 mg","schedule":"With dinner","log_date":"2026-05-31","taken":true,"refill_due":"2026-06-22"}
