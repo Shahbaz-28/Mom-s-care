@@ -47,5 +47,3 @@ queries/
 supabase/
 BUILD_PLAN.md
 project_handoff.md
-frontend/AGENTS.md
-frontend/CLAUDE.md
