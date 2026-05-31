@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { scheduleCareJsonlSync } from "@/lib/integrations/jsonl-sync";
 import { matchDrugWithOpenFda } from "@/lib/integrations/openfda";
 import { mapDrugCheck } from "@/lib/mappers";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    scheduleCareJsonlSync();
     return NextResponse.json(mapDrugCheck(data), { status: 201 });
   } catch (e) {
     return NextResponse.json(

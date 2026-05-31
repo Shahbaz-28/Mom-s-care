@@ -1,4 +1,10 @@
 import type { Alert, Appointment, Medication, SymptomEntry } from "@/lib/mock-data";
+import {
+  findMissedMedicationStreaks,
+  formatMedScheduleLabel,
+  medScheduleKey,
+  missedMedsAlertThreshold,
+} from "@/lib/medication-streak";
 
 export function formatDateLabel(iso: string) {
   const d = new Date(iso + "T12:00:00");
@@ -43,23 +49,55 @@ export function buildAlerts(
 
   const missedToday = medications.filter((m) => m.logDate === today && !m.takenToday);
   if (missedToday.length > 0) {
+    const uniqueMissed = [...new Set(missedToday.map((m) => m.name.trim()))];
     alerts.push({
       id: "local-missed",
       type: "med-missed",
       severity: "critical",
-      title: `${missedToday.length} medication(s) missed today`,
-      message: missedToday.map((m) => m.name).join(", ") + " not logged as taken.",
+      title: `${uniqueMissed.length} medication(s) missed today`,
+      message: uniqueMissed.join(", ") + " not logged as taken.",
+    });
+  }
+
+  const streakThreshold = missedMedsAlertThreshold();
+  const missedStreaks = findMissedMedicationStreaks(medications, streakThreshold, today);
+  for (const streak of missedStreaks) {
+    const sorted = streak.dates.slice().sort();
+    const range =
+      sorted.length >= 2
+        ? `${formatDateLabel(sorted[0])} – ${formatDateLabel(sorted[sorted.length - 1])}`
+        : formatDateLabel(sorted[0] ?? today);
+
+    const label = formatMedScheduleLabel(streak.name, streak.schedule);
+    alerts.push({
+      id: `local-missed-streak-${medScheduleKey(streak.name, streak.schedule).replace(/\|/g, "-")}`,
+      type: "med-missed",
+      severity: "critical",
+      title: `${label} missed ${streak.streak} day(s) in a row`,
+      message: `Not taken on ${range}. This pattern can precede symptom flares — check Patterns.`,
     });
   }
 
   const refillSoon = medications.filter((m) => m.daysUntilRefill <= 5 && m.daysUntilRefill >= 0);
   if (refillSoon.length > 0) {
+    const soonestByDrug = new Map<string, { name: string; days: number }>();
+    for (const m of refillSoon) {
+      const key = m.name.trim().toLowerCase();
+      const existing = soonestByDrug.get(key);
+      if (!existing || m.daysUntilRefill < existing.days) {
+        soonestByDrug.set(key, { name: m.name.trim(), days: m.daysUntilRefill });
+      }
+    }
+    const refillParts = [...soonestByDrug.values()]
+      .sort((a, b) => a.days - b.days)
+      .map((r) => `${r.name} (${r.days}d)`);
+
     alerts.push({
       id: "local-refill",
       type: "refill-due",
       severity: "warning",
       title: `Refill due within 5 days`,
-      message: refillSoon.map((m) => `${m.name} (${m.daysUntilRefill}d)`).join(" · "),
+      message: refillParts.join(" · "),
     });
   }
 

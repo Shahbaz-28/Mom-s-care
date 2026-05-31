@@ -9,10 +9,13 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 function symptomMatches(name: string, question: string): boolean {
   const q = question.toLowerCase();
   const n = name.toLowerCase();
+  if (q.includes("chest tightness") || q.includes("chest pain")) {
+    return n.includes("chest");
+  }
   if (q.includes("dizz") || q.includes("lightheaded")) {
     return n.includes("dizz") || n.includes("light");
   }
-  if (q.includes("chest")) return n.includes("chest");
+  if (q.includes("chest") || q.includes("tightness")) return n.includes("chest");
   if (q.includes("cough")) return n.includes("cough");
   if (q.includes("breath")) return n.includes("breath");
   return true;

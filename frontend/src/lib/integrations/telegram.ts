@@ -89,3 +89,48 @@ export async function notifyHighSeveritySymptom(
     return { sent: false, error: message };
   }
 }
+
+export interface MissedMedicationAlertPayload {
+  patientName?: string;
+  drugName: string;
+  streakDays: number;
+  missedDates: string[];
+}
+
+export function formatMissedMedicationMessage(payload: MissedMedicationAlertPayload): string {
+  const who = payload.patientName ?? "Mom";
+  const sorted = payload.missedDates.slice().sort();
+  const range =
+    sorted.length >= 2
+      ? `${sorted[0]} – ${sorted[sorted.length - 1]}`
+      : sorted[0] ?? "recent days";
+
+  const lines = [
+    `⚠️ Missed medication alert — ${who}`,
+    ``,
+    `${payload.drugName} missed ${payload.streakDays} day(s) in a row`,
+    `Dates: ${range}`,
+    ``,
+    `Log medications in the dashboard to confirm or update.`,
+    ``,
+    `Caregiver's Second Set of Eyes`,
+  ];
+  return lines.join("\n");
+}
+
+export async function notifyMissedMedicationStreak(
+  payload: MissedMedicationAlertPayload
+): Promise<{ sent: boolean; error?: string }> {
+  if (!isTelegramConfigured()) {
+    return { sent: false, error: "Telegram not configured" };
+  }
+
+  try {
+    await sendTelegramMessage(formatMissedMedicationMessage(payload));
+    return { sent: true };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Telegram send failed";
+    console.error("[telegram]", message);
+    return { sent: false, error: message };
+  }
+}

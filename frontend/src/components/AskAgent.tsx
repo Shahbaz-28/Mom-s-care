@@ -46,7 +46,6 @@ export function AskAgent() {
 
       <CareFormCard
         title="Your question"
-        description='Try: "Did dizziness happen after missed pills when it was hot?"'
       >
         <form
           onSubmit={(e) => {

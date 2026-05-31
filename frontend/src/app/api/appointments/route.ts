@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { scheduleCareJsonlSync } from "@/lib/integrations/jsonl-sync";
 import { mapAppointmentInput } from "@/lib/mappers";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    scheduleCareJsonlSync();
     return NextResponse.json(mapAppointmentInput(data), { status: 201 });
   } catch (e) {
     return NextResponse.json(

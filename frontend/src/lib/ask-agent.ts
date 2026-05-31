@@ -17,20 +17,20 @@ export interface AskPlan {
 }
 
 const EXAMPLE_QUESTIONS = [
-  "Did Mom's dizziness happen after missed pills when it was hot?",
   "Any symptoms rated 8 or higher?",
+  "Did chest tightness happen after missed pills when it was hot?",
   "Which medications were missed recently?",
-  "What does the FDA say about lisinopril side effects?",
   "Show symptoms with weather on the same day",
+  "What does the FDA say about lisinopril side effects?",
 ] as const;
 
 export { EXAMPLE_QUESTIONS };
 
 const SYMPTOM_ALIASES: Record<string, string[]> = {
   dizziness: ["dizz", "lightheaded", "light-headed", "vertigo"],
+  chest: ["chest", "tightness", "chest pain", "chest tightness"],
   cough: ["cough", "dry cough"],
-  chest: ["chest", "tightness"],
-  breath: ["breath", "shortness"],
+  breath: ["breath", "shortness", "shortness of breath"],
   nausea: ["nausea", "stomach", "upset"],
 };
 
@@ -40,13 +40,18 @@ function includesAny(text: string, terms: string[]): boolean {
 
 function extractSymptomFilter(question: string): string | null {
   const q = question.toLowerCase();
-  for (const [, aliases] of Object.entries(SYMPTOM_ALIASES)) {
-    if (includesAny(q, aliases)) {
-      const primary = aliases[0];
-      return `lower(s.name) LIKE '%${primary.replace(/'/g, "''")}%'`;
+  let best: string | null = null;
+  let bestLen = 0;
+  for (const aliases of Object.values(SYMPTOM_ALIASES)) {
+    for (const alias of aliases) {
+      if (q.includes(alias) && alias.length > bestLen) {
+        best = alias;
+        bestLen = alias.length;
+      }
     }
   }
-  return null;
+  if (!best) return null;
+  return `lower(s.name) LIKE '%${best.replace(/'/g, "''")}%'`;
 }
 
 function hotThreshold(question: string): number {
@@ -79,7 +84,9 @@ function scoreIntents(question: string): IntentScore[] {
     "breath",
   ]);
   const after = includesAny(q, ["after", "before", "when", "following", "during"]);
-  const severity = includesAny(q, ["severity", "high", "serious", "severe", "8", "9", "10"]);
+  const severity =
+    includesAny(q, ["severity", "high", "serious", "severe", "8", "9", "10"]) ||
+    /\b8\s*\+|\b8\s*or\s*(higher|above|more)|rated\s*8/i.test(q);
   const fda = includesAny(q, ["fda", "side effect", "label", "warning", "reaction"]);
   const drug = extractDrugNameFromQuestion(question) !== null || includesAny(q, ["drug", "medication", "medicine", "pill"]);
   const appt = includesAny(q, ["appointment", "doctor", "visit", "specialist"]);

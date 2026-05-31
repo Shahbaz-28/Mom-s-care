@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { scheduleCareJsonlSync } from "@/lib/integrations/jsonl-sync";
 import { mapSymptom } from "@/lib/mappers";
 import { sendHighSeverityTelegramIfNeeded } from "@/lib/symptom-alerts";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
@@ -58,6 +59,8 @@ export async function POST(request: Request) {
       severity: data.severity,
       notes: data.notes,
     });
+
+    scheduleCareJsonlSync();
 
     return NextResponse.json(
       { ...mapSymptom(data), telegramAlert: telegram },

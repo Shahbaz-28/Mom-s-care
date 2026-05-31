@@ -16,7 +16,39 @@ export interface MedicationPayload {
 
 interface MedicationTrackerProps {
   medications: Medication[];
-  onAdd: (payload: MedicationPayload) => Promise<void>;
+  onAdd: (payload: MedicationPayload) => Promise<{
+    telegramAlert?: {
+      sent: boolean;
+      error?: string;
+      streak?: number;
+      threshold?: number;
+      reason?: string;
+    };
+  } | void>;
+}
+
+function telegramNoticeText(alert: {
+  sent: boolean;
+  error?: string;
+  streak?: number;
+  threshold?: number;
+  reason?: string;
+}): string | null {
+  if (alert.sent) {
+    return "Telegram alert sent — same med & schedule missed 2+ days in a row.";
+  }
+  if (alert.error) {
+    return `Saved, but Telegram failed: ${alert.error}`;
+  }
+  const threshold = alert.threshold ?? 2;
+  const streak = alert.streak ?? 0;
+  if (!alert.sent && streak > 0 && streak < threshold) {
+    if (streak === 1) {
+      return `Saved. Day 1 missed — log the same med & schedule as missed yesterday too, then Telegram sends.`;
+    }
+    return `Saved. ${streak} of ${threshold} consecutive missed days — one more missed day triggers Telegram.`;
+  }
+  return null;
 }
 
 export function MedicationTracker({ medications, onAdd }: MedicationTrackerProps) {
@@ -28,6 +60,7 @@ export function MedicationTracker({ medications, onAdd }: MedicationTrackerProps
   const [taken, setTaken] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [telegramNotice, setTelegramNotice] = useState<string | null>(null);
 
   const sorted = [...medications].sort((a, b) => b.logDate.localeCompare(a.logDate));
   const todayMeds = medications.filter((m) => m.logDate === todayIso());
@@ -39,8 +72,9 @@ export function MedicationTracker({ medications, onAdd }: MedicationTrackerProps
 
     setSaving(true);
     setFormError(null);
+    setTelegramNotice(null);
     try {
-      await onAdd({
+      const result = await onAdd({
         name: name.trim(),
         dose: dose.trim(),
         schedule,
@@ -48,6 +82,10 @@ export function MedicationTracker({ medications, onAdd }: MedicationTrackerProps
         takenToday: taken,
         refillDue: refillDue || todayIso(),
       });
+      if (result?.telegramAlert) {
+        const notice = telegramNoticeText(result.telegramAlert);
+        if (notice) setTelegramNotice(notice);
+      }
       setName("");
       setDose("");
       setTaken(true);
@@ -62,7 +100,7 @@ export function MedicationTracker({ medications, onAdd }: MedicationTrackerProps
     <div className="space-y-6">
       <CareFormCard
         title="Log a medication"
-        description="Record whether a pill was taken. Saved to Supabase."
+        description="Record whether a pill was taken. Telegram alerts after the same med & schedule is missed 2 days in a row."
       >
         <form onSubmit={handleSubmit} className="grid gap-3 sm:grid-cols-2">
           <div>
@@ -131,6 +169,15 @@ export function MedicationTracker({ medications, onAdd }: MedicationTrackerProps
           </div>
           <div className="sm:col-span-2">
             {formError && <p className="mb-2 text-sm text-red-600">{formError}</p>}
+            {telegramNotice && (
+              <p
+                className={`mb-2 text-sm ${
+                  telegramNotice.includes("failed") ? "text-amber-700" : "text-teal-700"
+                }`}
+              >
+                {telegramNotice}
+              </p>
+            )}
             <button type="submit" className={submitClass} disabled={saving}>
               {saving ? "Saving…" : "Save medication log"}
             </button>

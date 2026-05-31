@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { scheduleCareJsonlSync } from "@/lib/integrations/jsonl-sync";
+import { sendMissedMedsTelegramIfNeeded } from "@/lib/medication-alerts";
 import { mapMedication } from "@/lib/mappers";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
@@ -47,7 +49,19 @@ export async function POST(request: Request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(mapMedication(data), { status: 201 });
+
+    const telegramAlert = await sendMissedMedsTelegramIfNeeded({
+      name: data.name,
+      schedule: data.schedule,
+      logDate: data.log_date,
+      taken: data.taken,
+    });
+
+    scheduleCareJsonlSync();
+    return NextResponse.json(
+      { ...mapMedication(data), telegramAlert },
+      { status: 201 }
+    );
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Server error" },

@@ -19,7 +19,13 @@ export async function createMedication(payload: {
   logDate: string;
   taken: boolean;
   refillDue?: string | null;
-}): Promise<Medication> {
+}): Promise<Medication & { telegramAlert?: {
+  sent: boolean;
+  error?: string;
+  streak?: number;
+  threshold?: number;
+  reason?: string;
+} }> {
   const res = await fetch("/api/medications", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -132,6 +138,30 @@ export async function askCareAgent(question: string): Promise<AskResponse> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question }),
   });
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
+}
+
+export interface WeeklySummaryResponse {
+  rows: import("@/lib/mock-data").WeeklyRow[];
+  source: string;
+}
+
+export async function fetchWeeklySummary(): Promise<WeeklySummaryResponse> {
+  const res = await fetch("/api/weekly");
+  if (!res.ok) throw new Error(await parseError(res));
+  return res.json();
+}
+
+export interface CoralStatusResponse {
+  connected: boolean;
+  sourceCount: number;
+  sources: string[];
+  expectedSources: string[];
+}
+
+export async function fetchCoralStatus(): Promise<CoralStatusResponse> {
+  const res = await fetch("/api/coral/status");
   if (!res.ok) throw new Error(await parseError(res));
   return res.json();
 }

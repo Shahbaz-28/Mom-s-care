@@ -17,18 +17,21 @@ import {
   createMedication,
   createSymptom,
   fetchAllCareData,
+  fetchCoralStatus,
   fetchPatterns,
+  fetchWeeklySummary,
+  type CoralStatusResponse,
 } from "@/lib/api-client";
 import { buildAlerts, buildAppointments, todayIso } from "@/lib/care-utils";
 import {
   navItems,
   patientName,
-  weeklySummary,
   type DailyPattern,
   type DrugMatch,
   type Medication,
   type SymptomEntry,
   type TabId,
+  type WeeklyRow,
 } from "@/lib/mock-data";
 
 export function Dashboard() {
@@ -44,6 +47,36 @@ export function Dashboard() {
   const [patternsLoading, setPatternsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [weeklyRows, setWeeklyRows] = useState<WeeklyRow[]>([]);
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
+  const [weeklySource, setWeeklySource] = useState<string>("");
+  const [coralStatus, setCoralStatus] = useState<CoralStatusResponse | null>(null);
+  const [coralStatusLoading, setCoralStatusLoading] = useState(true);
+
+  const loadWeekly = useCallback(async () => {
+    setWeeklyLoading(true);
+    try {
+      const data = await fetchWeeklySummary();
+      setWeeklyRows(data.rows);
+      setWeeklySource(data.source);
+    } catch {
+      setWeeklyRows([]);
+      setWeeklySource("");
+    } finally {
+      setWeeklyLoading(false);
+    }
+  }, []);
+
+  const loadCoralStatus = useCallback(async () => {
+    setCoralStatusLoading(true);
+    try {
+      setCoralStatus(await fetchCoralStatus());
+    } catch {
+      setCoralStatus(null);
+    } finally {
+      setCoralStatusLoading(false);
+    }
+  }, []);
 
   const loadPatterns = useCallback(async () => {
     setPatternsLoading(true);
@@ -71,16 +104,18 @@ export function Dashboard() {
       setAppointmentRecords(data.appointmentRecords);
       setDrugMatches(data.drugMatches);
       await loadPatterns();
+      await loadWeekly();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
-  }, [loadPatterns]);
+  }, [loadPatterns, loadWeekly]);
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    loadCoralStatus();
+  }, [loadData, loadCoralStatus]);
 
   const appointments = useMemo(
     () => buildAppointments(appointmentRecords, symptoms),
@@ -99,29 +134,39 @@ export function Dashboard() {
         tab: "pattern",
         title: "Symptoms logged",
         stat: String(symptoms.length),
-        desc: "Open Patterns to add more",
-        color: "from-indigo-500 to-violet-600",
+        desc: "Track severity over time",
+        icon: "📈",
+        accent: "bg-violet-500",
+        ring: "hover:ring-1 hover:ring-violet-100",
       },
       {
         tab: "meds",
         title: "Today's meds",
         stat: `${takenToday} / ${todayMeds.length}`,
-        desc: "Log taken or missed on Meds tab",
-        color: "from-teal-500 to-emerald-600",
+        desc: takenToday === todayMeds.length && todayMeds.length > 0
+          ? "All logged for today"
+          : "Log taken or missed",
+        icon: "💊",
+        accent: "bg-teal-500",
+        ring: "hover:ring-1 hover:ring-teal-100",
       },
       {
         tab: "visits",
         title: "Next visit",
         stat: nextAppt ? nextAppt.label : "—",
         desc: nextAppt ? nextAppt.specialty : "Add an appointment",
-        color: "from-sky-500 to-blue-600",
+        icon: "🩺",
+        accent: "bg-sky-500",
+        ring: "hover:ring-1 hover:ring-sky-100",
       },
       {
         tab: "drugs",
         title: "FDA checks",
         stat: String(drugMatches.length),
-        desc: "Medications queued for cross-reference",
-        color: "from-rose-500 to-orange-500",
+        desc: "Cross-reference side effects",
+        icon: "⚕️",
+        accent: "bg-rose-500",
+        ring: "hover:ring-1 hover:ring-rose-100",
       },
     ];
   }, [medications, symptoms.length, appointments, drugMatches.length]);
@@ -138,9 +183,6 @@ export function Dashboard() {
               {patientName}&apos;s care
             </h1>
             <p className="text-sm text-slate-500">Caregiver&apos;s second set of eyes</p>
-          </div>
-          <div className="hidden rounded-full bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-800 sm:block">
-            Supabase + OpenFDA + Meteo
           </div>
         </div>
 
@@ -194,8 +236,10 @@ export function Dashboard() {
             {activeTab === "home" && (
               <HomeView
                 alerts={alerts}
-                patientName={patientName}
                 cards={homeCards}
+                patternInsight={patternInsight}
+                coralStatus={coralStatus}
+                coralStatusLoading={coralStatusLoading}
                 onNavigate={(tab) => setActiveTab(tab as TabId)}
               />
             )}
@@ -217,6 +261,7 @@ export function Dashboard() {
                   });
                   setSymptoms((prev) => [saved, ...prev]);
                   await loadPatterns();
+                  await loadWeekly();
                   return { telegramAlert: saved.telegramAlert };
                 }}
               />
@@ -235,6 +280,8 @@ export function Dashboard() {
                   });
                   setMedications((prev) => [saved, ...prev]);
                   await loadPatterns();
+                  await loadWeekly();
+                  return { telegramAlert: saved.telegramAlert };
                 }}
               />
             )}
@@ -249,6 +296,7 @@ export function Dashboard() {
                     notes: payload.notes,
                   });
                   setAppointmentRecords((prev) => [saved, ...prev]);
+                  await loadWeekly();
                 }}
               />
             )}
@@ -264,14 +312,12 @@ export function Dashboard() {
                 }}
               />
             )}
-            {activeTab === "weekly" && <WeeklySummary rows={weeklySummary} />}
+            {activeTab === "weekly" && (
+              <WeeklySummary rows={weeklyRows} loading={weeklyLoading} source={weeklySource} />
+            )}
           </>
         )}
       </main>
-
-      <footer className="border-t border-slate-200 bg-white py-3 text-center text-xs text-slate-400">
-        Supabase · OpenFDA · Open-Meteo
-      </footer>
     </div>
   );
 }

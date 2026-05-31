@@ -42,6 +42,9 @@ next-env.d.ts
 # Cursor / local tooling
 .cursor/
 
+# Local dedupe state for Telegram alerts
+data/telegram-dedupe.json
+
 # Local-only (not pushed to GitHub)
 queries/
 supabase/

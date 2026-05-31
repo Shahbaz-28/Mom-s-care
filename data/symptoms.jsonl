@@ -1,3 +1,7 @@
-{"log_date":"2026-05-29","name":"Lightheaded","severity":6,"notes":null}
-{"log_date":"2026-05-30","name":"Shortness of breath","severity":7,"notes":null}
-{"log_date":"2026-05-31","name":"Chest tightness","severity":9,"notes":"Morning, after missed BP meds"}
+{"log_date":"2026-05-27","name":"Lightheaded","severity":6,"notes":null}
+{"log_date":"2026-05-28","name":"Shortness of breath","severity":7,"notes":null}
+{"log_date":"2026-05-29","name":"Chest tightness","severity":9,"notes":"Morning, after missed BP meds"}
+{"log_date":"2026-05-31","name":"chest pain","severity":9,"notes":null}
+{"log_date":"2026-05-31","name":"Shortness of breath","severity":9,"notes":null}
+{"log_date":"2026-05-31","name":"Shortness of breath","severity":5,"notes":null}
+{"log_date":"2026-05-31","name":"Test chest pain","severity":9,"notes":"Telegram integration test"}
